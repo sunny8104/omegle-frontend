@@ -7,7 +7,7 @@ import VideoCall from "./videocall";
 import VoiceCall from "./voicecall";
 import io from "socket.io-client";
 
-const socket = io("https://your-backend-url.com");
+const socket = io("https://omegle-backend-e1ud.onrender.com");
 
 function App() {
   const [user, setUser] = useState(null);
@@ -62,34 +62,26 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-blue-900 via-purple-800 to-pink-700 text-white">
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.5 }}
-        className="text-4xl font-extrabold text-white shadow-lg mb-6"
+        className="text-4xl font-extrabold text-blue-400 shadow-lg mb-6"
       >
-        Omegle Clone - Chat, Voice & Video
+        Vimegle Styled - Chat, Voice & Video
       </motion.h1>
 
       {!user ? (
         <motion.button 
-          initial={{ scale: 0.9 }} 
-          animate={{ scale: 1 }} 
-          transition={{ duration: 0.2 }}
           onClick={handleLogin} 
-          className="bg-blue-500 px-6 py-3 rounded-full text-white text-lg font-semibold shadow-md hover:bg-blue-600 transition duration-300"
+          className="bg-blue-600 px-6 py-3 rounded-full text-white text-lg font-semibold shadow-md hover:bg-blue-700 transition duration-300"
         >
           Sign in with Google
         </motion.button>
       ) : (
         <>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            transition={{ duration: 0.3 }}
-            className="mb-6 flex items-center gap-4 bg-white/20 p-4 rounded-lg shadow-lg"
-          >
+          <motion.div className="mb-6 flex items-center gap-4 bg-gray-800 p-4 rounded-lg shadow-lg">
             <img src={user.photoURL} alt="Profile" className="w-12 h-12 rounded-full border-2 border-white" />
             <span className="text-lg font-semibold">{user.displayName}</span>
           </motion.div>
@@ -97,12 +89,12 @@ function App() {
           {!isVideoCall && !isVoiceCall ? (
             <>
               <div className="mb-4 flex gap-4">
-                <select value={gender} onChange={(e) => setGender(e.target.value)} className="p-2 bg-white text-black rounded">
+                <select value={gender} onChange={(e) => setGender(e.target.value)} className="p-2 bg-gray-700 text-white rounded">
                   <option value="any">Any Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                 </select>
-                <select value={region} onChange={(e) => setRegion(e.target.value)} className="p-2 bg-white text-black rounded">
+                <select value={region} onChange={(e) => setRegion(e.target.value)} className="p-2 bg-gray-700 text-white rounded">
                   <option value="any">Any Region</option>
                   <option value="us">USA</option>
                   <option value="uk">UK</option>
