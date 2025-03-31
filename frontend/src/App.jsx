@@ -7,7 +7,7 @@ import VideoCall from "./videocall";
 import VoiceCall from "./voicecall";
 import io from "socket.io-client";
 
-const socket = io("https://omegle-backend-e1ud.onrender.com");
+const socket = io("https://omegle-backend-e1ud.onrender.com/");
 
 function App() {
   const [user, setUser] = useState(null);
