@@ -3,63 +3,68 @@ import DailyIframe from "@daily-co/daily-js";
 
 const VideoCall = ({ onLeave, socket }) => {
   const videoCallRef = useRef(null);
-  const [callFrame, setCallFrame] = useState(null);
+  const callFrame = useRef(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
 
   useEffect(() => {
     const startVideoCall = async (roomUrl) => {
       try {
-        const newCallFrame = DailyIframe.createFrame(videoCallRef.current, {
+        callFrame.current = DailyIframe.createFrame(videoCallRef.current, {
           url: roomUrl,
           iframeStyle: { width: "100%", height: "100%", border: "0" },
           showLeaveButton: true,
         });
 
-        newCallFrame.on("left-meeting", () => {
+        callFrame.current.on("left-meeting", () => {
           onLeave();
         });
 
-        await newCallFrame.join();
-        setCallFrame(newCallFrame);
+        await callFrame.current.join();
       } catch (error) {
         console.error("Error starting video call:", error);
       }
     };
 
-    // Matchmaking event integration
     if (socket) {
       socket.emit("requestMatch");
 
-      socket.on("matchFound", ({ roomUrl }) => {
+      const handleMatchFound = ({ roomUrl }) => {
         startVideoCall(roomUrl);
-      });
-    }
+      };
 
-    return () => {
-      if (callFrame) {
-        callFrame.destroy();
-        setCallFrame(null);
-      }
-      if (socket) {
-        socket.off("matchFound");
-      }
-    };
-  }, [callFrame, onLeave, socket]);
+      socket.on("matchFound", handleMatchFound);
+
+      return () => {
+        socket.off("matchFound", handleMatchFound);
+      };
+    }
+  }, [onLeave, socket]);
 
   const toggleMic = () => {
-    if (callFrame) {
-      callFrame.setLocalAudio(!isMicOn);
-      setIsMicOn(!isMicOn);
+    if (callFrame.current) {
+      const newMicState = !isMicOn;
+      callFrame.current.setLocalAudio(newMicState);
+      setIsMicOn(newMicState);
     }
   };
 
   const toggleCam = () => {
-    if (callFrame) {
-      callFrame.setLocalVideo(!isCamOn);
-      setIsCamOn(!isCamOn);
+    if (callFrame.current) {
+      const newCamState = !isCamOn;
+      callFrame.current.setLocalVideo(newCamState);
+      setIsCamOn(newCamState);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (callFrame.current) {
+        callFrame.current.destroy();
+        callFrame.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="video-container relative">

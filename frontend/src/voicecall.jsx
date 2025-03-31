@@ -3,17 +3,19 @@ import io from "socket.io-client";
 
 const BACKEND_URL = "https://omegle-backend-e1ud.onrender.com";
 const socket = io(BACKEND_URL);
- // Change to your server URL
 
 const VoiceCall = () => {
   const localAudioRef = useRef(null);
   const remoteAudioRef = useRef(null);
-  const [peerConnection, setPeerConnection] = useState(null);
+  const peerConnection = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const peer = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
+
+    peerConnection.current = peer;
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       if (localAudioRef.current) {
@@ -34,38 +36,49 @@ const VoiceCall = () => {
       }
     };
 
-    setPeerConnection(peer);
+    socket.on("offer", async (offer) => {
+      if (!peerConnection.current) return;
+      await peerConnection.current.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peerConnection.current.createAnswer();
+      await peerConnection.current.setLocalDescription(answer);
+      socket.emit("answer", answer);
+    });
+
+    socket.on("answer", async (answer) => {
+      if (!peerConnection.current) return;
+      await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer));
+    });
+
+    socket.on("candidate", async (candidate) => {
+      if (!peerConnection.current) return;
+      await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+    });
 
     return () => {
-      peer.close();
+      if (peerConnection.current) {
+        peerConnection.current.close();
+        peerConnection.current = null;
+      }
+      socket.off("offer");
+      socket.off("answer");
+      socket.off("candidate");
     };
   }, []);
 
-  socket.on("offer", async (offer) => {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    socket.emit("answer", answer);
-  });
-
-  socket.on("answer", async (answer) => {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-  });
-
-  socket.on("candidate", async (candidate) => {
-    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-  });
-
   const startCall = async () => {
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
+    if (!peerConnection.current) return;
+    const offer = await peerConnection.current.createOffer();
+    await peerConnection.current.setLocalDescription(offer);
     socket.emit("offer", offer);
+    setIsConnected(true);
   };
 
   return (
     <div>
       <h2>Real-Time Voice Call</h2>
-      <button onClick={startCall}>Start Voice Call</button>
+      <button onClick={startCall} disabled={isConnected} className="bg-blue-500 text-white px-4 py-2 rounded">
+        {isConnected ? "Connected" : "Start Voice Call"}
+      </button>
       <audio ref={localAudioRef} autoPlay muted></audio>
       <audio ref={remoteAudioRef} autoPlay></audio>
     </div>
