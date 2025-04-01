@@ -5,7 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-const FRONTEND_URL = "https://omeglee-frontend.vercel.app"; 
+const FRONTEND_URL = "https://omeglee-frontend-ekjnozzed-sunny-s-projects-3972cfe9.vercel.app/"; 
 
 app.use(
   cors({
